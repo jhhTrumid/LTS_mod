@@ -1,0 +1,60 @@
+get_orders <-function(dateStart, dateEnd){
+
+query_orders <- sprintf("
+  select 
+  euds.orders.order_id as Or_Order_ID_fromOrders,
+  euds.orders.order_version as Or_Order_Version_fromOrders,
+  swarm_id as Or_Swarm_ID_fromOrders,
+  trading_account_id as Us_Trading_Account_ID_fromOrders,
+  trading_account_name as Us_Trading_Account_Name,
+  trading_account_mnemonic as Us_Trading_Account_Mnemonic_fromOrders,
+  euds.orders.trader_id as Us_Trader_ID_fromOrders,
+  trader_full_name as Us_Full_Name_fromOrders,
+  trader_name as Us_Email_fromOrders,
+  firm_id as Us_Firm_ID_fromOrder,
+  team_id as Us_Team_ID_fromOrders,
+  team_name as Us_Team_Name_fromOrders,
+  order_product_type as Or_Product_Type,
+  order_status_type as Or_Status_Type,
+  order_date as Or_Order_Date,
+  created_on as Or_Created_On,
+  modified_on as Or_Modified_On,
+  euds.orders.inserted_timestamp as Or_Inserted_Time,
+  date(euds.orders.inserted_timestamp) as Or_Inserted_Date,
+  swarm_phase as Or_Swarm_Phase,
+  order_path_source as Or_Order_Path_Source,
+
+  --order_legs
+  euds.orders_legs.instrument_id as Bn_Instrument_ID_fromOrders,
+  instrument_description as Bn_Instrument_Description_fromOrders,
+  euds.orders_legs.isin as Bn_Isin_fromOrders,
+  cusip as Bn_Cusip_fromOrders,
+  euds.orders_legs.ticker as Bn_Ticker_fromOrders,
+  issuer as Bn_Issuer_fromOrders, 
+  tags as Bn_Tags_fromOrders,
+  sector as Bn_Sector_fromOrders,
+  credit_quality as Bn_Credit_Quality_fromOrders,
+  order_leg_type as Or_Order_Leg_Type,
+  initial_quantity as Or_Initial_Quantity_fromOrders,
+  outstanding_quantity as Or_Outstanding_Quantity_fromOrders,
+  gte_expiry_timestamp as Or_GTE_Expiry_Timestamp,
+  gte_good_for_seconds as Or_Good_for_Seconds,
+  direction as Or_Direction,
+  price_convention as Or_Price_Convention,
+  price as Or_Price,
+  spread as Or_Spread,
+  hedge_or_spot as Or_Hedge_or_Spot,
+  accepted_dark_price as Or_Accepted_Dark_Price,
+  invited_dark_price as Or_Invited_Dark_Price,
+  prior_quantity as Or_Prior_Quantity
+  from euds.orders
+  inner join euds.orders_legs on euds.orders.order_id = euds.orders_legs.order_id 
+  and euds.orders.order_version = euds.orders_legs.order_version
+  where euds.orders.order_date >= '%s' and euds.order_date < '%e';",dateStart, dateEnd)
+  
+  flog.info(query_orders)
+  conn <- postgres_prod_connection_config()
+  res <- dbGetQuery(conn,query_orders)
+  postgressqlCloseConnection(conn)
+  res
+  }
